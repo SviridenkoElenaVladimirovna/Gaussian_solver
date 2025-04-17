@@ -6,7 +6,7 @@ CXX = g++
 AR = ar
 ARFLAGS = rsv
 
-EIGEN_PATH = /home/vboxuser/Desktop/eigen-3.4.0
+EIGEN_PATH ?= /home/vboxuser/Desktop/eigen-3.4.0
 CXXFLAGS = -I. -I$(EIGEN_PATH) -std=c++20 -Wall -Wextra -O3 -march=native
 LDFLAGS = -L. -l:$(LIBPROJECT)
 LDFLAGS_TEST = $(LDFLAGS) -lgtest -lgtest_main -lpthread

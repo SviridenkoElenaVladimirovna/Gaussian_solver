@@ -17,12 +17,21 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential cmake libgtest-dev libgtest-dev libeigen3-dev
+          sudo apt-get install -y build-essential cmake libgtest-dev wget
 
-      - name: Create Eigen symlink for compatibility
+      - name: Build GoogleTest manually
+        run: |
+          cd /usr/src/gtest
+          sudo cmake .
+          sudo make
+          sudo cp lib/*.a /usr/lib
+
+      - name: Download and setup Eigen
         run: |
           mkdir -p deps
-          ln -s /usr/include/eigen3 deps/eigen-3.4.0
+          wget https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz -O deps/eigen.tar.gz
+          tar -xzf deps/eigen.tar.gz -C deps
+          mv deps/eigen-3.4.0* deps/eigen-3.4.0
 
       - name: Build project
         run: |
@@ -30,7 +39,7 @@ jobs:
 
       - name: Run tests
         run: |
-          make test
+          make test EIGEN_PATH=${{ github.workspace }}/deps/eigen-3.4.0
           ./test-gaussian_solver
 
       - name: Upload build artifacts
