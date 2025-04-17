@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: dev
+  pull_request:
+    branches: dev
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    env:
+      EIGEN_PATH: ${{ github.workspace }}/deps/eigen-3.4.0
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake libgtest-dev
+
+      - name: Build GoogleTest
+        run: |
+          cd /usr/src/gtest
+          sudo cmake CMakeLists.txt
+          sudo make
+          sudo cp *.a /usr/lib
+
+      - name: Download and setup Eigen
+        run: |
+          mkdir -p deps
+          wget https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz -O deps/eigen.tar.gz
+          tar -xzf deps/eigen.tar.gz -C deps
+          echo "EIGEN_PATH=$GITHUB_WORKSPACE/deps/eigen-3.4.0" >> $GITHUB_ENV
+
+      - name: Build project
+        run: |
+          make CXXFLAGS="-I$EIGEN_PATH -std=c++20 -Wall -Wextra -O3" LDFLAGS="-lgtest -lgtest_main -lpthread"
+
+      - name: Run tests
+        run: |
+          make test
+          ./test-gaussian_solver
+
+      - name: Upload build artifacts
+        if: success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: gaussian-solver-bin
+          path: |
+            gaussian_solver
+            test-gaussian_solver
