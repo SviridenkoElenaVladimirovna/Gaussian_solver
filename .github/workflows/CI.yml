@@ -8,36 +8,25 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-22.04  
-    env:
-      EIGEN_PATH: ${{ github.workspace }}/deps/eigen-3.4.0
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4 
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential cmake libgtest-dev wget
+          sudo apt-get install -y build-essential cmake libgtest-dev libgtest-dev libeigen3-dev
 
-      - name: Build GoogleTest
-        run: |
-          cd /usr/src/gtest
-          sudo cmake CMakeLists.txt
-          sudo make
-          sudo cp *.a /usr/lib
-
-      - name: Download and setup Eigen
+      - name: Create Eigen symlink for compatibility
         run: |
           mkdir -p deps
-          wget https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz -O deps/eigen.tar.gz
-          tar -xzf deps/eigen.tar.gz -C deps
-          echo "EIGEN_PATH=$GITHUB_WORKSPACE/deps/eigen-3.4.0" >> $GITHUB_ENV
+          ln -s /usr/include/eigen3 deps/eigen-3.4.0
 
       - name: Build project
         run: |
-          make CXXFLAGS="-I$EIGEN_PATH -std=c++20 -Wall -Wextra -O3" LDFLAGS="-lgtest -lgtest_main -lpthread"
+          make all EIGEN_PATH=${{ github.workspace }}/deps/eigen-3.4.0
 
       - name: Run tests
         run: |
@@ -46,7 +35,7 @@ jobs:
 
       - name: Upload build artifacts
         if: success()
-        uses: actions/upload-artifact@v4 
+        uses: actions/upload-artifact@v4
         with:
           name: gaussian-solver-bin
           path: |
