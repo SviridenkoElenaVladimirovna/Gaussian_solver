@@ -19,10 +19,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential cmake libgtest-dev wget
 
-      - name: Build GoogleTest manually
+      - name: Build GoogleTest
         run: |
           cd /usr/src/gtest
-          sudo cmake .
+          sudo cmake CMakeLists.txt
           sudo make
           sudo cp lib/*.a /usr/lib
 
@@ -31,15 +31,21 @@ jobs:
           mkdir -p deps
           wget https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz -O deps/eigen.tar.gz
           tar -xzf deps/eigen.tar.gz -C deps
-          mv deps/eigen-3.4.0* deps/eigen-3.4.0
+          for d in deps/eigen-3.4.0*; do
+            if [ -d "$d" ] && [ "$d" != "deps/eigen-3.4.0" ]; then
+              mv "$d" deps/eigen-3.4.0
+              break
+            fi
+          done
+          echo "EIGEN_PATH=${{ github.workspace }}/deps/eigen-3.4.0" >> $GITHUB_ENV
 
       - name: Build project
         run: |
-          make all EIGEN_PATH=${{ github.workspace }}/deps/eigen-3.4.0
+          make CXXFLAGS="-I${EIGEN_PATH} -std=c++20 -Wall -Wextra -O3 -march=native"
 
       - name: Run tests
         run: |
-          make test EIGEN_PATH=${{ github.workspace }}/deps/eigen-3.4.0
+          make test
           ./test-gaussian_solver
 
       - name: Upload build artifacts
