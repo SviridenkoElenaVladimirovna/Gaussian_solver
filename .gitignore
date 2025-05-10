@@ -8,6 +8,13 @@ gaussian_solver.a
 libgaussian_solver.a 
 gaussian_solver.o 
 main.o 
+input.csv
+output.csv
+test_empty.csv
+test_invalid.csv
+test_output.csv
+test_with_header.csv
+tests.o
 
 # User-specific files
 *.rsuser
